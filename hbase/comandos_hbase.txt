@@ -1,0 +1,15 @@
+# Abrir consola HBase:
+hbase shell
+
+# Crear tabla con familias de columnas orientadas al catálogo:
+create 'steam_catalog', 'info', 'metrics'
+
+# Cargar registros de prueba (RowKey = AppID):
+put 'steam_catalog', '10', 'info:name', 'Counter-Strike'
+put 'steam_catalog', '10', 'metrics:price', '9.99'
+put 'steam_catalog', '730', 'info:name', 'Counter-Strike: Global Offensive'
+put 'steam_catalog', '730', 'metrics:price', '0.00'
+
+# Validar lectura en tiempo real:
+scan 'steam_catalog'
+exit
