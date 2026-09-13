@@ -1,4 +1,4 @@
--- Cargar dataset TSV mapeando su estructura real
+-- 1. Cargar el dataset TSV mapeando tipos numéricos reales
 juegos_raw = LOAD '/user/cloudera/proyecto/raw/games_sqoop/part-m-00000' USING PigStorage('\t') AS (
     Name:chararray,
     Release_date:chararray,
@@ -12,14 +12,14 @@ juegos_raw = LOAD '/user/cloudera/proyecto/raw/games_sqoop/part-m-00000' USING P
     Supported_languages:chararray
 );
 
--- Filtrar registros nulos o inconsistentes
+-- 2. Filtrar inconsistencias y divisiones por cero
 juegos_limpios = FILTER juegos_raw BY 
     Name IS NOT NULL AND 
+    Price IS NOT NULL AND 
     Price >= 0.0 AND 
-    Peak_CCU >= 0 AND 
     (Positive + Negative) > 0;
 
--- Transformacion y calculo de metricas esperadas por Hive
+-- 3. Proyectar conservando el precio real y calculando el ratio
 juegos_transformados = FOREACH juegos_limpios GENERATE 
     1000 AS AppID:int,
     Name AS Name:chararray,
@@ -36,5 +36,5 @@ juegos_transformados = FOREACH juegos_limpios GENERATE
     Genres AS Genres:chararray,
     Supported_languages AS Supported_languages:chararray;
 
--- Almacenar resultado procesado en HDFS
+-- 4. Almacenar resultado procesado en HDFS
 STORE juegos_transformados INTO '/user/cloudera/proyecto/processed/juegos_etiquetados' USING PigStorage('\t');
