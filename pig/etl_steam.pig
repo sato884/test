@@ -1,4 +1,3 @@
-
 -- Cargar dataset TSV mapeando su estructura real
 juegos_raw = LOAD '/user/cloudera/proyecto/raw/games_sqoop/part-m-00000' USING PigStorage('\t') AS (
     Name:chararray,
@@ -39,10 +38,3 @@ juegos_transformados = FOREACH juegos_limpios GENERATE
 
 -- Almacenar resultado procesado en HDFS
 STORE juegos_transformados INTO '/user/cloudera/proyecto/processed/juegos_etiquetados' USING PigStorage('\t');
-EOF
-
-# Limpiar directorio previo directamente desde HDFS
-hdfs dfs -rm -r /user/cloudera/proyecto/processed/juegos_etiquetados 2>/dev/null || true
-
-# Ejecutar Pig
-pig -x mapreduce /home/cloudera/workspace/test/pig/etl_steam.pig
