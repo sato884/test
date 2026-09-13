@@ -1,4 +1,3 @@
-cat << 'EOF' > /home/cloudera/workspace/test/pig/etl_steam.pig
 -- 1. Cargar mapeando el archivo real
 juegos_raw = LOAD '/user/cloudera/proyecto/raw/games_sqoop/part-m-00000' USING PigStorage('\t') AS (
     Name:chararray,
