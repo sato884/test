@@ -1,4 +1,5 @@
--- 1. Cargar mapeando el archivo real
+
+-- Cargar dataset TSV mapeando su estructura real
 juegos_raw = LOAD '/user/cloudera/proyecto/raw/games_sqoop/part-m-00000' USING PigStorage('\t') AS (
     Name:chararray,
     Release_date:chararray,
@@ -12,14 +13,14 @@ juegos_raw = LOAD '/user/cloudera/proyecto/raw/games_sqoop/part-m-00000' USING P
     Supported_languages:chararray
 );
 
--- 2. Filtrar filas inconsistentes o nulas
+-- Filtrar registros nulos o inconsistentes
 juegos_limpios = FILTER juegos_raw BY 
     Name IS NOT NULL AND 
     Price >= 0.0 AND 
     Peak_CCU >= 0 AND 
     (Positive + Negative) > 0;
 
--- 3. Generar la estructura exacta que espera la tabla de Hive
+-- Transformacion y calculo de metricas esperadas por Hive
 juegos_transformados = FOREACH juegos_limpios GENERATE 
     1000 AS AppID:int,
     Name AS Name:chararray,
@@ -36,7 +37,12 @@ juegos_transformados = FOREACH juegos_limpios GENERATE
     Genres AS Genres:chararray,
     Supported_languages AS Supported_languages:chararray;
 
--- 4. Limpiar directorio previo y guardar resultado
-fs -rm -r /user/cloudera/proyecto/processed/juegos_etiquetados;
+-- Almacenar resultado procesado en HDFS
 STORE juegos_transformados INTO '/user/cloudera/proyecto/processed/juegos_etiquetados' USING PigStorage('\t');
 EOF
+
+# Limpiar directorio previo directamente desde HDFS
+hdfs dfs -rm -r /user/cloudera/proyecto/processed/juegos_etiquetados 2>/dev/null || true
+
+# Ejecutar Pig
+pig -x mapreduce /home/cloudera/workspace/test/pig/etl_steam.pig
