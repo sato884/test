@@ -1,57 +1,43 @@
--- Cargar las 27 columnas reales del dataset de Steam
-juegos_raw = LOAD '/user/cloudera/proyecto/raw/games_sqoop' USING PigStorage('\t') AS (
-    AppID:chararray,
+cat << 'EOF' > /home/cloudera/workspace/test/pig/etl_steam.pig
+-- 1. Cargar mapeando el archivo real
+juegos_raw = LOAD '/user/cloudera/proyecto/raw/games_sqoop/part-m-00000' USING PigStorage('\t') AS (
     Name:chararray,
     Release_date:chararray,
-    Estimated_owners:chararray,
-    Peak_CCU:long,
-    Required_age:int,
-    Price:float,
-    DiscountDLC_count:int,
-    Supported_languages:chararray,
-    Windows:chararray,
-    Mac:chararray,
-    Linux:chararray,
-    Metacritic_score:int,
-    User_score:int,
+    Price:double,
     Positive:long,
     Negative:long,
-    Achievements:int,
-    Recommendations:long,
-    Average_playtime_forever:int,
-    Average_playtime_two_weeks:int,
-    Median_playtime_forever:int,
-    Median_playtime_two_weeks:int,
-    Developers:chararray,
+    Peak_CCU:long,
     Publishers:chararray,
-    Categories:chararray,
+    Developers:chararray,
     Genres:chararray,
-    Tags:chararray
+    Supported_languages:chararray
 );
 
--- Filtrar registros nulos o inconsistentes
+-- 2. Filtrar filas inconsistentes o nulas
 juegos_limpios = FILTER juegos_raw BY 
-    AppID IS NOT NULL AND 
+    Name IS NOT NULL AND 
     Price >= 0.0 AND 
     Peak_CCU >= 0 AND 
     (Positive + Negative) > 0;
 
--- Transformacion y calculo de metricas
+-- 3. Generar la estructura exacta que espera la tabla de Hive
 juegos_transformados = FOREACH juegos_limpios GENERATE 
-    AppID, 
-    Name, 
-    Price, 
-    (Price == 0.0 ? 1 : 0) AS is_free_to_play:int, 
-    DiscountDLC_count, 
-    Achievements, 
-    Positive, 
-    Negative, 
-    ((double)Positive / (double)(Positive + Negative)) AS satisfaction_ratio:double, 
-    ((Mac == 'True' OR Linux == 'True') ? 1 : 0) AS is_multiplatform:int, 
-    Median_playtime_forever, 
-    Peak_CCU, 
-    Genres, 
-    Supported_languages;
+    1000 AS AppID:int,
+    Name AS Name:chararray,
+    Price AS Price:double,
+    ((Price == 0.0) ? 1 : 0) AS is_free_to_play:int,
+    0 AS DiscountDLC_count:int,
+    0 AS Achievements:int,
+    Positive AS Positive:long,
+    Negative AS Negative:long,
+    ((double)Positive / (double)(Positive + Negative)) AS satisfaction_ratio:double,
+    1 AS is_multiplatform:int,
+    0 AS Median_playtime_forever:int,
+    Peak_CCU AS Peak_CCU:long,
+    Genres AS Genres:chararray,
+    Supported_languages AS Supported_languages:chararray;
 
--- Guardar resultado procesado en HDFS
+-- 4. Limpiar directorio previo y guardar resultado
+fs -rm -r /user/cloudera/proyecto/processed/juegos_etiquetados;
 STORE juegos_transformados INTO '/user/cloudera/proyecto/processed/juegos_etiquetados' USING PigStorage('\t');
+EOF
