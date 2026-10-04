@@ -115,6 +115,24 @@ Este script ejecuta consultas SQL sobre la capa Gold para mostrar:
 - estudiantes en riesgo académico,
 - mayor carga académica.
 
+## Visualización y Dashboard (Power BI)
+
+Se implementó un dashboard interactivo en Power BI Desktop conectado directamente a la capa Gold (`data/gold/resumen_estudiantes/`) leyendo el archivo nativo Parquet.
+
+### Vista del Dashboard
+
+![Dashboard Power BI](dashboard/captura_dashboard.png)
+
+### Métricas y Consultas Representadas
+
+- **KPIs Globales:** Total de estudiantes (19.992), promedio GPA histórico (2,71) y asistencia media universitaria (86,04%).
+- **Top 5 GPA:** Alumnos con mejor rendimiento histórico, liderado por `STU_07017` (GPA 3.90).
+- **Alerta Riesgo Semestre 1:** Monitoreo de los 10 casos más críticos de primer semestre con GPA inferior a 2.0 (umbral de reprobación).
+- **Carga Académica:** Top 10 estudiantes con mayor cantidad de cursos acumulados (máximo de 153 asignaturas).
+- **Monitoreo de Asistencia:** Detección de los 10 alumnos con menor porcentaje de asistencia histórica (rango crítico de 69,4% a 71,3%).
+
+El archivo `.pbix` con las visualizaciones y filtros se encuentra disponible en `dashboard/dashboard_estudiantes.pbix`.
+
 ## Resultados esperados
 
 Al finalizar el flujo, el proyecto genera una capa de datos preparada para análisis con una estructura resumida por estudiante en formato Parquet.
